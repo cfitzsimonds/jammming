@@ -4,7 +4,7 @@ import React from 'react';
 let accessToken;
 let ttl;
 let tracksArray = [];
-const siteURL = 'http://localhost:3000/callback/';
+const siteURL = 'http://localhost:3000/';
 
 const apiURL = 'https://api.spotify.com/v1';
 const headers = { headers: { Authorization: `Bearer ${accessToken}` } };
