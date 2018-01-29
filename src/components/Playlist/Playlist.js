@@ -14,7 +14,7 @@ class Playlist extends React.Component {
 
   render() {
     return (
-      	<div class="Playlist">
+      	<div className="Playlist">
 			<input
 				value={this.props.name}
 				onChange={this.handleNameChange}

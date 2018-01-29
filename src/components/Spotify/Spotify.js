@@ -1,16 +1,6 @@
-import React from 'react';
-//import {clientId, clientSecret} from './secret';
-
+const clientId = '4e5b93c4d0a447d499f3e232c8b7593b'; // Insert client ID here.
+const redirectUri = 'http://localhost:3000/'; // Have to add this to your accepted Spotify redirect URIs on the Spotify API.
 let accessToken;
-let ttl;
-let tracksArray = [];
-const siteURL = 'http://localhost:3000/';
-
-const apiURL = 'https://api.spotify.com/v1';
-const headers = { headers: { Authorization: `Bearer ${accessToken}` } };
-
-const clientId = '4e5b93c4d0a447d499f3e232c8b7593b';
-const clientSecret = '6596fb0749fe44dfa472a77b01934603';
 
 const Spotify = {
   getAccessToken() {
@@ -27,16 +17,23 @@ const Spotify = {
       window.history.pushState('Access Token', null, '/'); // This clears the parameters, allowing us to grab a new access token when it expires.
       return accessToken;
     } else {
-      const redirectUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${siteURL}`;
-      window.location = redirectUrl;
+      const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
+      window.location = accessUrl;
     }
   },
 
   search(term) {
-    if (!accessToken) { Spotify.getAccessToken(); }
-    const searchUrl = `${apiURL}/search?type=track&q=${term}`;
-    return fetch(searchUrl, headers).then(response => response.json()).then(jsonResponse => {
-      if (!jsonResponse.tracks) { return []; }
+    const accessToken = Spotify.getAccessToken();
+    return fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }).then(response => {
+      return response.json();
+    }).then(jsonResponse => {
+      if (!jsonResponse.tracks) {
+        return [];
+      }
       return jsonResponse.tracks.items.map(track => ({
         id: track.id,
         name: track.name,
@@ -47,30 +44,34 @@ const Spotify = {
     });
   },
 
-  savePlaylist(playlistName,playlistTracks) {
-    if (!playlistName || !playlistTracks) { return }
-    else {
-      let userId;
-      let url = 'me';
-      // get userID //
-      return fetch(url, headers).then(response => response.json()).then(jsonResponse => {
-        userId = jsonResponse.id;
-        url = `${apiURL}/users/${userId}/playlists`;
-        let body = { name: playlistName };
-        let thePost = { headers: headers, method: 'POST', body: JSON.stringify(body) };
-        // get playlistID //
-        return fetch(url, thePost).then(response => response.json()
-          ).then(jsonResponse => jsonResponse.id).then(playlistId => {
-          console.log("Spotify.playlistid: " + playlistId);
-          url = `${apiURL}/users/${userId}/playlists/${playlistId}/tracks`;
-          body = { uris: playlistTracks };
-          thePost = { headers: headers, method: 'POST', body: JSON.stringify(body) };
-          // save playlistTracks //
-          return fetch(url, thePost).then(response => console.log("Spotify said: " + response));
+  savePlaylist(name, trackUris) {
+    if (!name || !trackUris.length) {
+      return;
+    }
+
+    const accessToken = Spotify.getAccessToken();
+    const headers = { Authorization: `Bearer ${accessToken}` };
+    let userId;
+
+    return fetch('https://api.spotify.com/v1/me', {headers: headers}
+    ).then(response => response.json()
+    ).then(jsonResponse => {
+      userId = jsonResponse.id;
+      return fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+        headers: headers,
+        method: 'POST',
+        body: JSON.stringify({name: name})
+      }).then(response => response.json()
+      ).then(jsonResponse => {
+        const playlistId = jsonResponse.id;
+        return fetch(`https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`, {
+          headers: headers,
+          method: 'POST',
+          body: JSON.stringify({uris: trackUris})
         });
       });
-    }
+    });
   }
-}
+};
 
 export default Spotify;
