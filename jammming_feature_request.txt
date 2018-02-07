@@ -1,0 +1,6 @@
+Google Doc
+https://docs.google.com/document/d/1-zSayZrfvKmSw4NgFCSaGdwEzgY9X7VQwgUzGqcDHWU/edit?usp=sharing
+
+Deployed Solution
+http://chrisfitz.surge.sh/
+
